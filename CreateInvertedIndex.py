@@ -6,6 +6,19 @@ from textblob import TextBlob as tb
 from threading import Thread
 from math import ceil
 import time
+from sgmllib import SGMLParser
+import re
+
+class TextExtracter(SGMLParser):
+    def __init__(self):
+        self.init()
+        SGMLParser.__init__(self)
+    def handle_data(self, data):
+        self.text.append(data)
+    def getDatas(self):
+        return ''.join(self.text)
+    def init(self):
+        self.text = []
 
 class MyHTMLParser(HTMLParser):
     def __init__(self):
@@ -101,17 +114,27 @@ def inverter(mapDocs):
 
 def parser(filename):
     warcfile = warc.open(filename)
-    htmlParser = MyHTMLParser()
+    #htmlParser = MyHTMLParser()
+    htmlParser = TextExtracter()
     mapDocs = MapDocs()
     docId = 0
     for doc in warcfile:
-        try:
-            htmlParser.init()
-            htmlParser.feed(unicode(doc.payload, errors="ignore"))
-            words = tb(htmlParser.getDatas()).words
-            mapDocs.addDoc(docId, words)
-        except Exception, e:
-            print e
+        # try:
+        string = unicode(doc.payload, errors="ignore")
+        string = re.compile(r'[\n\r]*').sub('', string)
+        string = re.compile(r'HTTP/1.1[^<]*').sub('', string)
+        string = re.compile(r'(?i)<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>').sub('', string)
+        string = re.compile(r'(?i)<head\b[^<]*(?:(?!<\/head>)<[^<]*)*<\/head>').sub('', string)
+        string = re.compile(r'(?i)<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>').sub('', string)
+        string = re.compile(r'<.*?>').sub(',', string)
+        #htmlParser.init()
+        #content = re.compile(r'HTTP/1.1[^<]*').sub('', unicode(doc.payload, errors="ignore"))
+        #htmlParser.feed(content)
+        #words = tb(htmlParser.getDatas()).words
+        words = tb(string).words
+        mapDocs.addDoc(docId, words)
+        # except Exception, e:
+        #     print e
         # if docId % 100 == 2:
         #     break;
         if docId % 100 == 0:

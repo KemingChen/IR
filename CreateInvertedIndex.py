@@ -47,7 +47,7 @@ class MyHTMLParser(HTMLParser):
 
 class MapDocs():
     def __init__(self):
-        self.keys = ["af", "gp", "qz"]
+        self.keys = list(chr(i) for i in range(ord('a'), ord('z')+1))
         self.outputs = {}
         for key in self.keys:
             self.outputs[key] = open("result/map_" + key + ".jdb", 'w')
@@ -58,15 +58,8 @@ class MapDocs():
             TP[key] = []
 
         for idx, value in enumerate(words):
-            head = value[0]
-            key = ""
-            if head >= "a" and head <= "f":
-                key = "af"
-            elif head >= "g" and head <= "p":
-                key = "gp"
-            elif head >= "q" and head <= "z":
-                key = "qz"
-            if key != "":
+            key = value[0]
+            if key >= "a" and key <= "z":
                 TP[key].append([value, idx])
 
         for key in self.keys:
@@ -126,7 +119,7 @@ def parser(filename):
         string = re.compile(r'(?i)<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>').sub('', string)
         string = re.compile(r'(?i)<head\b[^<]*(?:(?!<\/head>)<[^<]*)*<\/head>').sub('', string)
         string = re.compile(r'(?i)<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>').sub('', string)
-        string = re.compile(r'<.*?>').sub(',', string)
+        string = re.compile(r'<.*?>').sub(', ', string)
         #htmlParser.init()
         #content = re.compile(r'HTTP/1.1[^<]*').sub('', unicode(doc.payload, errors="ignore"))
         #htmlParser.feed(content)

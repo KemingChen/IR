@@ -61,7 +61,7 @@ class InvertedIndex():
     def printIndex(self):
         print self.index
 
-def parse(filename,ifrom, ito):
+def parse(i, filename, ifrom, ito):
     warcfile = warc.open(filename)
     print "ifrom " + str(ifrom) + " " + str(ito) + ";"
     index = InvertedIndex()
@@ -80,25 +80,28 @@ def parse(filename,ifrom, ito):
         elif docId > ito:
             break
         docId += 1
-    print "finish: " + str(ifrom) + "~" + str(ito)
+    print "finish: " + str(ifrom) + "~" + str(docId)
+    #index.printIndex()
+    with open('invertedIndex.jdb' + str(i), 'w') as outfile:
+        json.dump(index.getIndex(), outfile)
 
 def main():
     #filename = "data/ClueWeb09_English_Sample.warc"
     filename = "data/10.warc.gz"
     warcfile = warc.open(filename)
-    fileCount = sum(1 for _ in warcfile)
-    threadNum = 4
-    oneSize = int(ceil(fileCount / float(threadNum)))
+    partialNum = 4
+    oneSize = 10000
     threads = []
 
     # Create Thread
-    for i in xrange(0, threadNum):
-        t = Thread(target=parse, args=(filename, i * oneSize, (i + 1) * oneSize - 1,))
-        t.start()
-        threads.append(t) 
+    for i in xrange(0, partialNum):
+        parse(i, filename, i * oneSize, (i + 1) * oneSize - 1)
+    #     t = Thread(target=parse, args=(filename, i * oneSize, (i + 1) * oneSize - 1,))
+    #     t.start()
+    #     threads.append(t) 
 
-    for t in threads:
-        t.join()
+    # for t in threads:
+    #     t.join()
 
     # parse(filename, 0, 100)
 

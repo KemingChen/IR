@@ -88,14 +88,14 @@ def parse(i, filename, ifrom, ito):
 def main():
     #filename = "data/ClueWeb09_English_Sample.warc"
     filename = "data/10.warc.gz"
-    warcfile = warc.open(filename)
+    #warcfile = warc.open(filename)
     partialNum = 4
     oneSize = 10000
     threads = []
-
+    parse(10, filename, 0, 40000)
     # Create Thread
-    for i in xrange(0, partialNum):
-        parse(i, filename, i * oneSize, (i + 1) * oneSize - 1)
+    # for i in xrange(0, partialNum):
+    #     parse(i, filename, i * oneSize, (i + 1) * oneSize - 1)
     #     t = Thread(target=parse, args=(filename, i * oneSize, (i + 1) * oneSize - 1,))
     #     t.start()
     #     threads.append(t) 

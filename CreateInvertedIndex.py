@@ -32,84 +32,89 @@ class MyHTMLParser(HTMLParser):
         self.processing=None 
         self.datas = []
 
+class MapDoc():
+    def __init__(self):
+        self.docs = {}
+    def addTerm(self, docId, term, pos):
+        if self.docs.get(docId) == None:
+            self.docs[docId] = self.addDoc()
+        self.docs[docId].append([term, pos])
+    def addDoc(self):
+        return []
+    def getData(self):
+        return self.docs
 
 class InvertedIndex():
     def __init__(self):
         self.index = {}
-    def addDocument(self,docId,data):
-        words = tb(data).words
-        #print words
-        for idx, value in enumerate(words):
-            term = value
-            self.addTerm(docId,term,idx)
-    def addTerm(self,docId,term,pos):
-        if self.index.get(term) == None:
-            self.index[term] = self.newTerm()
-        if self.index[term]["docs"].get(docId) == None:
-            self.index[term]["df"] += 1
-            self.index[term]["docs"][docId] = self.newDoc()
-        self.index[term]["docs"][docId]["tf"] += 1
-        self.index[term]["docs"][docId]["pos"].append(pos)
-
-        #print term, pos
+    def addDocument(self, docId, terms):
+        for term in terms:
+            self.addTerm(docId, term)
+    def addTerm(self, docId, term):
+        termName = term[0]
+        pos = term[1]
+        if self.index.get(termName) == None:
+            self.index[termName] = self.newTerm()
+        if self.index[termName]["docs"].get(docId) == None:
+            self.index[termName]["df"] += 1
+            self.index[termName]["docs"][docId] = self.newDoc()
+        self.index[termName]["docs"][docId]["tf"] += 1
+        self.index[termName]["docs"][docId]["pos"].append(pos)
     def newTerm(self):
         return {"df": 0, "docs": {}}
     def newDoc(self):
         return {"tf": 0, "pos": []}
     def getIndex(self):
         return self.index
-    def printIndex(self):
-        print self.index
 
-def parse(i, filename, ifrom, ito):
+def inverter(mapDocs):
+    index = {"af": InvertedIndex(), "gp": InvertedIndex(), "qz": InvertedIndex()}
+    for key in mapDocs:
+        mapDoc = mapDocs[key].getData()
+        for docId in mapDoc:
+            index[key].addDocument(docId, mapDoc[docId])
+            if docId % 100 == 0:
+                print "reduce: " + str(docId)
+        with open("result/invertedIndex_" + key + ".jdb", 'w') as outfile:
+            json.dump(index[key].getIndex(), outfile)
+
+def parser(filename):
     warcfile = warc.open(filename)
-    print "ifrom " + str(ifrom) + " " + str(ito) + ";"
-    index = InvertedIndex()
-    parser = MyHTMLParser()
+    htmlParser = MyHTMLParser()
+    mapDocs = {"af": MapDoc(), "gp": MapDoc(), "qz": MapDoc()}
     docId = 0
     for doc in warcfile:
-        if docId >= ifrom and docId <= ito:
-            try:
-                parser.init()
-                parser.feed(unicode(doc.payload, errors="ignore"))
-                index.addDocument(docId,parser.getDatas())
-            except Exception, e:
-                print e
-            if docId % 100 == 0:
-                print "doc: " + str(docId)
-        elif docId > ito:
-            break
+        try:
+            htmlParser.init()
+            htmlParser.feed(unicode(doc.payload, errors="ignore"))
+            words = tb(htmlParser.getDatas()).words
+            for idx, value in enumerate(words):
+                head = value[0]
+                key = ""
+                if head >= "a" and head <= "f":
+                    key = "af"
+                elif head >= "g" and head <= "p":
+                    key = "gp"
+                elif head >= "q" and head <= "z":
+                    key = "qz"
+                if key != "":
+                    mapDocs[key].addTerm(docId, value, idx)
+        except Exception, e:
+            print e
+        if docId % 100 == 0:
+            print "map: " + str(docId)
         docId += 1
-    print "finish: " + str(ifrom) + "~" + str(docId)
-    #index.printIndex()
-    with open('invertedIndex.jdb' + str(i), 'w') as outfile:
-        json.dump(index.getIndex(), outfile)
+
+    for key in mapDocs:
+        with open("result/map_" + key + ".jdb", 'w') as outfile:
+            json.dump(mapDocs[key].getData(), outfile)
+    return mapDocs
 
 def main():
     #filename = "data/ClueWeb09_English_Sample.warc"
     filename = "data/10.warc.gz"
-    #warcfile = warc.open(filename)
-    partialNum = 4
-    oneSize = 10000
-    threads = []
-    parse(10, filename, 0, 40000)
-    # Create Thread
-    # for i in xrange(0, partialNum):
-    #     parse(i, filename, i * oneSize, (i + 1) * oneSize - 1)
-    #     t = Thread(target=parse, args=(filename, i * oneSize, (i + 1) * oneSize - 1,))
-    #     t.start()
-    #     threads.append(t) 
+    mapDocs = parser(filename)
+    #inverter(mapDocs)
 
-    # for t in threads:
-    #     t.join()
-
-    # parse(filename, 0, 100)
-
- 
 if __name__ == '__main__':
     main()
-
-
-#index.printIndex()
-# with open('invertedIndex.jdb', 'w') as outfile:
-#   json.dump(index.getIndex(), outfile)

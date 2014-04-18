@@ -3,6 +3,9 @@ import warc
 import json
 from HTMLParser import HTMLParser
 from textblob import TextBlob as tb
+from threading import Thread
+from math import ceil
+import time
 
 class MyHTMLParser(HTMLParser):
     def __init__(self):
@@ -22,10 +25,10 @@ class MyHTMLParser(HTMLParser):
             self.datas.append(self.data);
             self.processing=None 
     def getDatas(self):
-        return (', '.join(self.datas)).lower()
+        return (', '.join(self.datas))
     def init(self):
         self.taglevels=[] 
-        self.handledtags=['head', 'script']
+        self.handledtags=['head', 'script', 'style']
         self.processing=None 
         self.datas = []
 
@@ -35,6 +38,7 @@ class InvertedIndex():
         self.index = {}
     def addDocument(self,docId,data):
         words = tb(data).words
+        #print words
         for idx, value in enumerate(words):
             term = value
             self.addTerm(docId,term,idx)
@@ -57,19 +61,52 @@ class InvertedIndex():
     def printIndex(self):
         print self.index
 
-index = InvertedIndex()
-f = warc.open("data/10.warc.gz")
-#f = warc.open("data/ClueWeb09_English_Sample.warc")
-docId = 0
-for doc in f:
+def parse(filename,ifrom, ito):
+    warcfile = warc.open(filename)
+    print "ifrom " + str(ifrom) + " " + str(ito) + ";"
+    index = InvertedIndex()
     parser = MyHTMLParser()
-    try:
-        parser.feed(unicode(doc.payload, errors="ignore"))
-        index.addDocument(docId,parser.getDatas())
-    except Exception, e:
-        print e
-    print "doc: " + str(docId)
-    docId += 1
+    docId = 0
+    for doc in warcfile:
+        if docId >= ifrom and docId <= ito:
+            try:
+                parser.init()
+                parser.feed(unicode(doc.payload, errors="ignore"))
+                index.addDocument(docId,parser.getDatas())
+            except Exception, e:
+                print e
+            if docId % 100 == 0:
+                print "doc: " + str(docId)
+        elif docId > ito:
+            break
+        docId += 1
+    print "finish: " + str(ifrom) + "~" + str(ito)
+
+def main():
+    #filename = "data/ClueWeb09_English_Sample.warc"
+    filename = "data/10.warc.gz"
+    warcfile = warc.open(filename)
+    fileCount = sum(1 for _ in warcfile)
+    threadNum = 4
+    oneSize = int(ceil(fileCount / float(threadNum)))
+    threads = []
+
+    # Create Thread
+    for i in xrange(0, threadNum):
+        t = Thread(target=parse, args=(filename, i * oneSize, (i + 1) * oneSize - 1,))
+        t.start()
+        threads.append(t) 
+
+    for t in threads:
+        t.join()
+
+    # parse(filename, 0, 100)
+
+ 
+if __name__ == '__main__':
+    main()
+
+
 #index.printIndex()
-with open('invertedIndex.jdb', 'w') as outfile:
-  json.dump(index.getIndex(), outfile)
+# with open('invertedIndex.jdb', 'w') as outfile:
+#   json.dump(index.getIndex(), outfile)

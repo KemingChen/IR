@@ -32,17 +32,38 @@ class MyHTMLParser(HTMLParser):
         self.processing=None 
         self.datas = []
 
-class MapDoc():
+class MapDocs():
     def __init__(self):
-        self.docs = {}
-    def addTerm(self, docId, term, pos):
-        if self.docs.get(docId) == None:
-            self.docs[docId] = self.addDoc()
-        self.docs[docId].append([term, pos])
-    def addDoc(self):
-        return []
-    def getData(self):
-        return self.docs
+        self.keys = ["af", "gp", "qz"]
+        self.outputs = {}
+        for key in self.keys:
+            self.outputs[key] = open("result/map_" + key + ".jdb", 'w')
+            self.outputs[key].write("{")
+    def addDoc(self, docId, words):
+        TP = {} # term & pos
+        for key in self.keys:
+            TP[key] = []
+
+        for idx, value in enumerate(words):
+            head = value[0]
+            key = ""
+            if head >= "a" and head <= "f":
+                key = "af"
+            elif head >= "g" and head <= "p":
+                key = "gp"
+            elif head >= "q" and head <= "z":
+                key = "qz"
+            if key != "":
+                TP[key].append([value, idx])
+
+        for key in self.keys:
+            if docId > 0:
+                self.outputs[key].write(",")
+            self.outputs[key].write("\"" + str(docId) + "\":")
+            json.dump(TP[key], self.outputs[key])
+    def close(self):
+        for key in self.keys:
+            self.outputs[key].write("}")
 
 class InvertedIndex():
     def __init__(self):
@@ -81,40 +102,35 @@ def inverter(mapDocs):
 def parser(filename):
     warcfile = warc.open(filename)
     htmlParser = MyHTMLParser()
-    mapDocs = {"af": MapDoc(), "gp": MapDoc(), "qz": MapDoc()}
+    mapDocs = MapDocs()
     docId = 0
     for doc in warcfile:
         try:
             htmlParser.init()
             htmlParser.feed(unicode(doc.payload, errors="ignore"))
             words = tb(htmlParser.getDatas()).words
-            for idx, value in enumerate(words):
-                head = value[0]
-                key = ""
-                if head >= "a" and head <= "f":
-                    key = "af"
-                elif head >= "g" and head <= "p":
-                    key = "gp"
-                elif head >= "q" and head <= "z":
-                    key = "qz"
-                if key != "":
-                    mapDocs[key].addTerm(docId, value, idx)
+            mapDocs.addDoc(docId, words)
         except Exception, e:
             print e
+        # if docId % 100 == 2:
+        #     break;
         if docId % 100 == 0:
             print "map: " + str(docId)
         docId += 1
+    mapDocs.close()
 
-    for key in mapDocs:
-        with open("result/map_" + key + ".jdb", 'w') as outfile:
-            json.dump(mapDocs[key].getData(), outfile)
-    return mapDocs
+def loader():
+    for key in ["af", "gp", "qz"]:
+        with open("result/map_" + key + ".jdb", 'r') as content:
+            print json.loads(content.read())
+        break
 
 def main():
     #filename = "data/ClueWeb09_English_Sample.warc"
     filename = "data/10.warc.gz"
-    mapDocs = parser(filename)
+    parser(filename)
     #inverter(mapDocs)
+    #loader()
 
 if __name__ == '__main__':
     main()

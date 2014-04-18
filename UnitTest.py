@@ -1,3 +1,3 @@
-mapDocs = {"af": 1, "gp": 2, "qz": 3}
-for x in mapDocs:
-	print x
+import json
+string = """{"0":[]}"""
+print json.loads(string)

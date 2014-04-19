@@ -2,6 +2,7 @@
 import json
 import os
 from math import log, sqrt
+import operator
 
 class InvertedIndex():
 	def __init__(self):
@@ -26,7 +27,9 @@ class InvertedIndex():
 					terms[keyword]["info"] = postingList
 			else:
 				terms[keyword]["count"] += 1
-
+		if len(terms) == 0:
+			print "Not Match Anything."
+			return
 		dicScores = {} # dependency docId
 		dicWtd2 = {} # dependency docId
 		Wtq2 = 0
@@ -41,6 +44,7 @@ class InvertedIndex():
 
 			docs = term["info"]["docs"]
 			for docId in docs:
+				# print docId
 				if dicScores.get(docId) == None:
 					dicScores[docId] = float(0)
 					dicWtd2[docId] = float(0)
@@ -56,13 +60,11 @@ class InvertedIndex():
 			Wtq2 = Wtq2
 			Length = sqrt(Wtd2) * sqrt(Wtq2)
 			dicScores[docId] = dicScores[docId] / Length
-		print "Scores", dicScores
-		#jIndex = json.loads(self.index[head])
+		
+		sortedScores = sorted(dicScores.iteritems(), key = operator.itemgetter(1), reverse = True)
+		for k, v in sortedScores[0 : 10]:
+			print "  " + str(k) + ": " + str(v)
 
-		# if jIndex.get(keyword) != None:
-		# 	print jIndex[keyword]["df"]
-		# else:
-		# 	print "None"
 	def findTerm(self, term):
 		head = term[0]
 		jIndex = json.loads(self.index[head])
@@ -79,18 +81,15 @@ class InvertedIndex():
 def main():
     index = InvertedIndex()
     print "OK"
-    keywords = "Hong Kong"
-    index.doScore(keywords)
-    return
     while 1:
     	try:
-    		# os.system("cls")
-    		# keyword = raw_input("Query: ")
-    		print "Result: "
-    		keywords = "a ffff"
-    		index.doScore(keywords)
-    		break
-    		os.system("pause")
+			os.system("cls")
+			keywords = raw_input("Query: ")
+			keywords = "test file"
+			print "Result: \n  <doc#>: <similarity score>"
+			index.doScore(keywords)
+			os.system("pause")
+			# break
     	except Exception, e:
     		print e
     		break

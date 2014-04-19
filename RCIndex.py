@@ -1,6 +1,5 @@
 # coding=utf-8
 import json
-from textblob import TextBlob as tb
 
 class InvertedIndex():
     def __init__(self):

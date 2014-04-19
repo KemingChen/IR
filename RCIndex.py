@@ -30,11 +30,10 @@ def main():
         index = InvertedIndex()
         with open("result/map_" + key + ".jdb", 'r') as content:
             jsonMap = json.loads(content.read())
-            print "start: " + key
             count = 0
             for docId in jsonMap:
                 if count % 100 == 0:
-                    print "start" + str(count)
+                    print "start index " + key + ": " + str(count)
                 index.addDocument(docId, jsonMap[docId])
                 count += 1
         with open("index/" + key + ".jdb", 'w') as output:

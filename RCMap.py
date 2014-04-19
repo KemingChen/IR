@@ -31,23 +31,33 @@ class MapDocs():
             self.outputs[key].write("}")
 
 # Html Extract Body, except tags
-def HtmlExtract(content):
-    string = content
-    string = re.compile(r'[\n\r]*').sub('', string)
-    string = re.compile(r'HTTP/1.1[^<]*').sub('', string)
-    string = re.compile(r'(?i)<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>').sub('', string)
-    string = re.compile(r'(?i)<head\b[^<]*(?:(?!<\/head>)<[^<]*)*<\/head>').sub('', string)
-    string = re.compile(r'(?i)<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>').sub('', string)
-    string = re.compile(r'<.*?>').sub(', ', string)
-    return string
+class HtmlExtract():
+    def __init__(self):
+        self.patterns = {}
+        self.patterns[0] = re.compile(r'[\n\r]*')
+        self.patterns[1] = re.compile(r'HTTP/1.1[^<]*')
+        self.patterns[2] = re.compile(r'(?i)<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>')
+        self.patterns[3] = re.compile(r'(?i)<head\b[^<]*(?:(?!<\/head>)<[^<]*)*<\/head>')
+        self.patterns[4] = re.compile(r'(?i)<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>')
+        self.patterns[5] = re.compile(r'<.*?>')
+    def re(self, content):
+        string = content
+        string = self.patterns[0].sub('', string)
+        string = self.patterns[1].sub('', string)
+        string = self.patterns[2].sub('', string)
+        string = self.patterns[3].sub('', string)
+        string = self.patterns[4].sub('', string)
+        string = self.patterns[5].sub(', ', string)
+        return string
 
 def parser(filename):
     warcfile = warc.open(filename)
     mapDocs = MapDocs()
+    htmlExtract = HtmlExtract()
     docId = 0
     for doc in warcfile:
         try:
-	    	content = HtmlExtract(unicode(doc.payload, errors="ignore"))
+	    	content = htmlExtract.re(unicode(doc.payload, errors="ignore"))
 	        words = tb(content).words
 	        mapDocs.addDoc(docId, words)
         except Exception, e:

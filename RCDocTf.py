@@ -14,5 +14,5 @@ for key in list(chr(i) for i in range(ord('a'), ord('z')+1)):
 				tDocs[docId][key] = docs[docId]["tf"]
 
 print "saving"
-with open("docs/docs.jdb", 'w') as output:
+with open("docs/_docs.jdb", 'w') as output:
 	json.dump(tDocs, output)

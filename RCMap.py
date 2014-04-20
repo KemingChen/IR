@@ -26,9 +26,12 @@ class MapDocs():
                 self.outputs[key].write(",")
             self.outputs[key].write("\"" + str(docId) + "\":")
             json.dump(TP[key], self.outputs[key])
-    def close(self):
+    def close(N):
         for key in self.keys:
             self.outputs[key].write("}")
+        info = {"DocNum": N}
+        with open("index/_info", 'w') as output:
+            json.dump(info, output)
 
 # Html Extract Body, except tags
 class HtmlExtract():
@@ -75,7 +78,7 @@ def parser(filename):
         if docId % 100 == 0:
             print "map: " + str(docId)
         docId += 1
-    mapDocs.close()
+    mapDocs.close(docId)
 
 def main():
     #filename = "data/ClueWeb09_English_Sample.warc"

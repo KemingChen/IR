@@ -7,6 +7,7 @@ import operator
 class InvertedIndex():
 	def __init__(self):
 		self.index = {}
+		self.docs = {}
 		self.load()
 		with open("index/_info", 'r') as content_file:
 			self.info = json.loads(content_file.read())
@@ -16,55 +17,52 @@ class InvertedIndex():
 			with open("index/"+ key + ".jdb", 'r') as content:
 				index = content.read()
 				self.index[key] = index
+		with open("index/_docs.jdb", 'r') as content:
+			self.docs = json.loads(content.read())
 	def doScore(self, keywords):
 		keywords = keywords.strip().lower().split(" ")
-		terms = {}
+		querys = {}
+		docList = []
+		Wtqs = {}
 		for keyword in keywords:
-			if terms.get(keyword) == None:
+			if querys.get(keyword) == None:
 				postingList = self.findTerm(keyword)
 				if postingList != {}:
-					terms[keyword] = {"count": 1}
-					terms[keyword]["info"] = postingList
+					querys[keyword] = {"tf": 1, "df": postingList["df"]}
+					docList = list(set(docList) | set(postingList["docs"].keys()))
+					# print len(postingList["docs"].keys())
 			else:
-				terms[keyword]["count"] += 1
-		if len(terms) == 0:
+				querys[keyword]["tf"] += 1
+		if len(querys) == 0:
 			print "Not Match Anything."
 			return
-		dicScores = {} # dependency docId
-		dicWtd2 = {} # dependency docId
-		Wtq2 = 0
-		for key in terms:
-			# print "key", key
-			term = terms[key]
-			idf = self.idf(float(term["info"]["df"]))
-			Wtq = self.weight(float(term["count"]), idf)
-			Wtq2 += Wtq * Wtq
-			# print "idf", idf
-			# print "Wtq", Wtq
 
-			docs = term["info"]["docs"]
-			for docId in docs:
-				# print docId
-				if dicScores.get(docId) == None:
-					dicScores[docId] = float(0)
-					dicWtd2[docId] = float(0)
-				# print docId, docs[docId]["tf"]
-				Wtd = self.weight(docs[docId]["tf"], idf)
-				# print "Wtd", docId, ": " , Wtd
-				# print "Wtq * Wtd: ", Wtq * Wtd
-				dicWtd2[docId] += Wtd * Wtd
-				dicScores[docId] += Wtq * Wtd
+		for key in querys:
+			query = querys[key]
+			Wtqs[key] = self.weight(query["tf"], query["df"], self.info["DocNum"])
+		Wtqs = self.normalize(Wtqs)
+		# print Wtqs
+		# print len(docList)
 
-		for docId in dicScores:
-			Wtd2 = dicWtd2[docId]
-			Wtq2 = Wtq2
-			Length = sqrt(Wtd2) * sqrt(Wtq2)
-			dicScores[docId] = dicScores[docId] / Length
-		
-		sortedScores = sorted(dicScores.iteritems(), key = operator.itemgetter(1), reverse = True)
-		for k, v in sortedScores[0 : 10]:
-			print "  " + str(k) + ": " + str(v)
+		Scores = {}
+		for docId in docList:
+			Scores[docId] = float(0)
+			tf_wt = {}
+			terms = self.docs[docId]
+			for key in terms:
+				tf_wt[key] = self.tf_weight(terms[key])
+			tf_wt = self.normalize(tf_wt)
+			# print tf_wt
+			
+			for key in querys:
+				if key not in tf_wt:
+					continue
+				Scores[docId] += tf_wt[key] * Wtqs[key]
+			# print Scores
+			# break
 
+		for k, v in sorted(Scores.iteritems(), key = operator.itemgetter(1), reverse = True)[0 : 10]:
+			print "  " + str(k) + ": " + str(round(v, 3))
 	def findTerm(self, term):
 		head = term[0]
 		jIndex = json.loads(self.index[head])
@@ -72,11 +70,21 @@ class InvertedIndex():
 			return jIndex[term]
 		else:
 			return {}
-	def weight(self, tf, idf):
-		return (1 + log(tf)) * idf
-	def idf(self, df):
-		DocNum = float(self.info["DocNum"])
-		return log(DocNum / df)
+	def weight(self, tf, df, N):
+		try:
+			return (1 + log(tf)) * log(N / df)
+		except Exception, e:
+			return 0
+	def tf_weight(self, tf):
+		return (1 + log(tf))
+	def normalize(self, vector):
+		value = float(0)
+		for i in vector:
+			value += vector[i] * vector[i]
+		L = sqrt(value)
+		for i in vector:
+			vector[i] = vector[i] / L
+		return vector
 
 def main():
     index = InvertedIndex()
@@ -85,11 +93,11 @@ def main():
     	try:
 			os.system("cls")
 			keywords = raw_input("Query: ")
-			keywords = "test file"
+			# keywords = "google"
 			print "Result: \n  <doc#>: <similarity score>"
 			index.doScore(keywords)
-			os.system("pause")
 			# break
+			os.system("pause")
     	except Exception, e:
     		print e
     		break

@@ -50,6 +50,14 @@ class HtmlExtract():
         string = self.patterns[5].sub(', ', string)
         return string
 
+def saveDocTf(docId, words):
+    temp = {}
+    for word in words:
+        if temp.get(word) == None:
+            temp[word] = words.count(word)
+    with open("docs/" + str(docId) + ".jdb", 'w') as output:
+        json.dump(temp, output)
+
 def parser(filename):
     warcfile = warc.open(filename)
     mapDocs = MapDocs()
@@ -57,8 +65,10 @@ def parser(filename):
     docId = 0
     for doc in warcfile:
         try:
-	    	content = htmlExtract.re(unicode(doc.payload, errors="ignore"))
-	        words = tb(content).words
+            content = htmlExtract.re(unicode(doc.payload, errors="ignore"))
+            docText = tb(content)
+            words = docText.words
+            saveDocTf(docId, words)
 	        mapDocs.addDoc(docId, words)
         except Exception, e:
             print e

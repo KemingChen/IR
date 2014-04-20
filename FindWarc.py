@@ -2,7 +2,7 @@
 import warc
 
 def main():
-    targetId = 10090
+    targetId = 22466
     #filename = "data/ClueWeb09_English_Sample.warc"
     filename = "data/10.warc.gz"
     warcfile = warc.open(filename)

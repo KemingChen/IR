@@ -40,7 +40,7 @@ class InvertedIndex():
 		for key in querys:
 			query = querys[key]
 			Wtqs[key] = self.weight(query["tf"], query["df"], self.info["DocNum"])
-		Wtqs = self.normalize(Wtqs)
+		# Wtqs = self.normalize(Wtqs)
 		# print Wtqs
 		# print len(docList)
 

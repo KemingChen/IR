@@ -1,1 +1,2 @@
-print list(chr(i) for i in range(ord('a'), ord('z')+1))
+print 1, "\t\t", 2
+print 123, "\t\t", 2

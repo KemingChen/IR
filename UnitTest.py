@@ -1,2 +1,2 @@
-for key in list(chr(i) for i in range(ord('a'), ord('z')+1)):
-	print key
+import os
+print os.path.isdir("index")

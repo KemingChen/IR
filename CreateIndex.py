@@ -2,8 +2,8 @@
 import warc
 import json
 from whoosh.analysis import SimpleAnalyzer
-# from textblob import TextBlob as tb
 import re
+import os
 
 class InvertedIndex():
     def __init__(self):
@@ -16,8 +16,6 @@ class InvertedIndex():
         for key in terms:
             term = key
             tf = terms[key]
-            # print term, tf
-            # exit()
             self.addTerm(docId, term, tf)
             self.tDocs[docId][term] = tf
     def addTerm(self, docId, term, tf):
@@ -32,7 +30,7 @@ class InvertedIndex():
     def newTerm(self):
         return {"df": 1, "docs": ""}
     def finish(self):
-        print "finishing"
+        print "finishing...wait"
         with open("index/_docs.jdb", 'w') as output:
             json.dump(self.tDocs, output)
     def commit(self, key):
@@ -66,10 +64,6 @@ class MapDocs():
         self.maps = {}
         for key in self.keys:
             self.maps[key] = {}
-        # self.outputs = {}
-        # for key in self.keys:
-        #     self.outputs[key] = open("result/map_" + key + ".jdb", 'w')
-        #     self.outputs[key].write("{")
     def addDoc(self, docId, words):
         for key in self.keys:
             self.maps[key][docId] = {}
@@ -80,14 +74,7 @@ class MapDocs():
                     self.maps[key][docId][word] = 1
                 else:
                     self.maps[key][docId][word] += 1
-        # for key in self.keys:
-        #     if docId > 0:
-        #         self.outputs[key].write(",")
-        #     self.outputs[key].write("\"" + str(docId) + "\":")
-        #     json.dump(TP[key], self.outputs[key])
     def close(self, N):
-        # for key in self.keys:
-        #     self.outputs[key].write("}")
         info = {"DocNum": N}
         with open("index/_info", 'w') as output:
             json.dump(info, output)
@@ -95,7 +82,13 @@ class MapDocs():
         return self.maps
 
 def parser(filename):
-    warcfile = warc.open(filename)
+    try:
+        warcfile = warc.open(filename)
+    except Exception, e:
+        os.system("cls")
+        print "Can't find the " + filename
+        os.system("pause")
+        raise e
     mapDocs = MapDocs()
     htmlExtract = HtmlExtract()
     ana = SimpleAnalyzer()
@@ -117,7 +110,7 @@ def inverter(maps):
         jsonMap = maps[key]
         count = 0
         for docId in jsonMap:
-            if count % 1000 == 0:
+            if count % 10000 == 0:
                 print "start index " + key + ": " + str(count)
             index.addDocument(docId, jsonMap[docId])
             count += 1
@@ -126,11 +119,22 @@ def inverter(maps):
 
 def main():
     # filename = "data/ClueWeb09_English_Sample.warc"
-    filename = "data/10.warc.gz"
-    maps = parser(filename)
-    # with open("maps.jdb", 'w') as output:
-    #     json.dump(maps, output)
-    inverter(maps)
+    # filename = "data/10.warc.gz"
+    while not os.path.isdir("index"):
+        os.system("cls")
+        print "Please Create `index` folder first!!!"
+        os.system("pause")
+
+    os.system("cls")
+    print "Please put WARC file in the `data` folder first!!!"
+    filename = raw_input("Enter the WARC file name: ")
+    filename = "data/" + filename
+    try:
+        maps = parser(filename)
+        inverter(maps)
+    except Exception, e:
+        main()
+
 
 if __name__ == '__main__':
     main()

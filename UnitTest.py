@@ -1,1 +1,2 @@
-print round(0.123456, 5)
+for key in list(chr(i) for i in range(ord('a'), ord('z')+1)):
+	print key

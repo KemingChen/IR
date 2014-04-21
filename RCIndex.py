@@ -4,39 +4,48 @@ import json
 class InvertedIndex():
     def __init__(self):
         self.index = {}
+        self.tDocs = {}
     def addDocument(self, docId, terms):
-        for term in terms:
-            self.addTerm(docId, term)
-    def addTerm(self, docId, data):
-        term = data[0]
-        pos = data[1]
+        if self.tDocs.get(docId) == None:
+            self.tDocs[docId] = {}
+
+        for idx, value in enumerate(terms):
+            self.addTerm(docId, idx, value)
+            self.tDocs[docId][idx] = value
+    def addTerm(self, docId, term, tf):
         if self.index.get(term) == None:
             self.index[term] = self.newTerm()
-        if self.index[term]["docs"].get(docId) == None:
+        else:
             self.index[term]["df"] += 1
-            self.index[term]["docs"][docId] = self.newDoc()
-        self.index[term]["docs"][docId]["tf"] += 1
-        self.index[term]["docs"][docId]["pos"].append(pos)
+
+        if self.index[term]["docs"] != "":
+            self.index[term]["docs"] += ","
+        self.index[term]["docs"] += str(docId)
     def newTerm(self):
-        return {"df": 0, "docs": {}}
-    def newDoc(self):
-        return {"tf": 0, "pos": []}
-    def getIndex(self):
-        return self.index
+        return {"df": 1, "docs": ""}
+    def finish(self):
+        print "finishing"
+        with open("index/_docs.jdb", 'w') as output:
+            json.dump(self.tDocs, output)
+    def commit(self, key):
+        with open("index/" + key + ".jdb", 'w') as output:
+            json.dump(self.index, output)
+        self.index = {}
 
 def main():
+    index = InvertedIndex()
     for key in list(chr(i) for i in range(ord('a'), ord('z')+1)):
-        index = InvertedIndex()
         with open("result/map_" + key + ".jdb", 'r') as content:
             jsonMap = json.loads(content.read())
             count = 0
             for docId in jsonMap:
-                if count % 100 == 0:
+                if count % 10000 == 0:
                     print "start index " + key + ": " + str(count)
                 index.addDocument(docId, jsonMap[docId])
                 count += 1
-        with open("index/" + key + ".jdb", 'w') as output:
-            json.dump(index.getIndex(), output)
+            index.commit(key)
+    index.finish()
+        
 
 if __name__ == '__main__':
     main()

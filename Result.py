@@ -29,7 +29,7 @@ class InvertedIndex():
 				postingList = self.findTerm(keyword)
 				if postingList != {}:
 					querys[keyword] = {"tf": 1, "df": postingList["df"]}
-					docList = list(set(docList) | set(postingList["docs"].keys()))
+					docList = list(set(docList) | set(postingList["docs"].split(",")))
 					# print len(postingList["docs"].keys())
 			else:
 				querys[keyword]["tf"] += 1
@@ -90,17 +90,17 @@ def main():
     index = InvertedIndex()
     print "OK"
     while 1:
-    	try:
-			os.system("cls")
-			keywords = raw_input("Query: ")
-			# keywords = "google"
-			print "Result: \n  <doc#>: <similarity score>"
-			index.doScore(keywords)
-			# break
-			os.system("pause")
-    	except Exception, e:
-    		print e
-    		break
+    	# try:
+		os.system("cls")
+		keywords = raw_input("Query: ")
+		# keywords = "google"
+		print "Result: \n  <doc#>: <similarity score>"
+		index.doScore(keywords)
+		# break
+		os.system("pause")
+    	# except Exception, e:
+    	# 	print e
+    	# 	break
 
 if __name__ == '__main__':
     main()

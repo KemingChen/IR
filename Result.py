@@ -9,16 +9,23 @@ class InvertedIndex():
 		self.index = {}
 		self.docs = {}
 		self.load()
-		with open("index/_info", 'r') as content_file:
-			self.info = json.loads(content_file.read())
 	def load(self):
-		print "Loading..."
-		for key in list(chr(i) for i in range(ord('a'), ord('z')+1)):
-			with open("index/"+ key + ".jdb", 'r') as content:
-				index = content.read()
-				self.index[key] = index
-		with open("index/_docs.jdb", 'r') as content:
-			self.docs = json.loads(content.read())
+		try:
+			print "Loading..."
+			with open("index/_info", 'r') as content_file:
+				self.info = json.loads(content_file.read())
+			for key in list(chr(i) for i in range(ord('a'), ord('z')+1)):
+				with open("index/"+ key + ".jdb", 'r') as content:
+					index = content.read()
+					self.index[key] = index
+			with open("index/_docs.jdb", 'r') as content:
+				self.docs = json.loads(content.read())
+		except Exception, e:
+			os.system("cls")
+			print "Please Execute _CreateIndex.bat first!!!"
+			os.system("pause")
+			exit()
+			
 	def doScore(self, keywords):
 		keywords = keywords.strip().lower().split(" ")
 		querys = {}

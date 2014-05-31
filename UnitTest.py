@@ -1,2 +1,2 @@
-import os
-print os.path.isdir("index")
+a = {}
+print "TRAIN", len(a)

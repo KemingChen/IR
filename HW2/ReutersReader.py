@@ -95,9 +95,10 @@ class ReutersReader():
 		tar = tarfile.open(filename)
 		tar.extractall(self.root, members=self.sgm_files(tar))
 		tar.close()
-		self.handle_sgms()
+		return self.handle_sgms()
 
 	def handle_sgms(self):
+		docs = {}
 		for root, _dirnames, filenames in os.walk(self.root):
 			for filename in filenames:
 				path = os.path.join(root, filename)
@@ -109,6 +110,9 @@ class ReutersReader():
 					print "TRAIN: ", len(self.RParser.getTrainDocs())
 					print "TEST: ", len(self.RParser.getTestDocs())
 					print ""
+		docs["train"] = self.RParser.getTrainDocs()
+		docs["test"] = self.RParser.getTestDocs()
+		return docs
 
 	def load(self):
 		docs = {}
@@ -131,7 +135,7 @@ class ReutersReader():
 
 RReader = ReutersReader()
 
-RReader.handle_tar("datas/reuters21578.tar.gz")
+docs = RReader.handle_tar("datas/reuters21578.tar.gz")
 
-docs = RReader.load()
+# docs = RReader.load()
 print len(docs["train"]), len(docs["test"])

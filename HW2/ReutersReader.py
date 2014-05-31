@@ -132,10 +132,3 @@ class ReutersReader():
 		for tarinfo in members:
 			if os.path.splitext(tarinfo.name)[1] == ".sgm":
 				yield tarinfo
-
-RReader = ReutersReader()
-
-docs = RReader.handle_tar("datas/reuters21578.tar.gz")
-
-# docs = RReader.load()
-print len(docs["train"]), len(docs["test"])

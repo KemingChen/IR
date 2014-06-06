@@ -21,13 +21,14 @@ import sys
 sys.path.append('irlab')
 
 # Importing the irlib stuff
-from irlib.classifier import NaiveBayes
+# from irlib.classifier import NaiveBayes
 from irlib.classifier import Rocchio  
-from irlib.classifier import KNN  
+# from irlib.classifier import KNN  
 from irlib.classifier import Evaluation 
 from irlib.preprocessor import Preprocessor  
 from irlib.configuration import Configuration  
 import json
+from whoosh.analysis import SimpleAnalyzer
 
 VERBOSE = True
 
@@ -58,8 +59,10 @@ def parse_files(fold=1, mode = "training", first_n_files = 500, ml=object, confi
 		if counter % 100 == 0:
 			print counter
 		doc_id = objs[i][unicode('id')]
-		terms = prep.ngram_tokenizer(text=objs[i][unicode('content')])
-		# terms = objs[i][unicode('content')]
+		# terms = prep.ngram_tokenizer(text=objs[i][unicode('content')])
+		terms = [token.text for token in prep(objs[i][unicode('content')]) if token.text != "" ]
+		# print terms
+
 		for class_name in objs[i][unicode('topics')]:
 			if mode == 'training':
 				ml.add_doc(doc_id = doc_id, doc_class=class_name, doc_terms=terms)
@@ -101,21 +104,22 @@ def main():
 	print config
 
 	#Preporcessor: tokenizer, stemmer, etc.
-	prep_lower = config_data['lower']
-	prep_stem = config_data['stem']
-	prep_pos = config_data['pos']
-	prep_ngram = config_data['ngram'] 
-	prep = Preprocessor(pattern='\W+', lower=prep_lower, stem=prep_stem, pos=prep_pos, ngram=prep_ngram)
+	# prep_lower = config_data['lower']
+	# prep_stem = config_data['stem']
+	# prep_pos = config_data['pos']
+	# prep_ngram = config_data['ngram'] 
+	# prep = Preprocessor(pattern='\W+', lower=prep_lower, stem=prep_stem, pos=prep_pos, ngram=prep_ngram)
+	prep = SimpleAnalyzer(expression=r"[A-Za-z]*", gaps=False)
 
 	ev = Evaluation()
 	ml = Rocchio(verbose=VERBOSE, fold='n/a', config=config, ev=ev)
-	training(config, "sgms/TRAIN.jdb", ml, prep, first_n_files=50)
+	training(config, "sgms/TRAIN.jdb", ml, prep, first_n_files=100)
 	ml.do_padding()
 	ml.calculate_training_data()
 	# r.display_idx()
 	ml.diagnose()
 	# config.display_configuration()
-	testing(config, "sgms/TEST.jdb", ml, ev, prep, first_n_files=10)
+	testing(config, "sgms/TEST.jdb", ml, ev, prep, first_n_files=100)
 	
 	k = config_data['k']
 	results = ev.calculate(review_spam=True, k=k)

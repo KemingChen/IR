@@ -18,7 +18,7 @@ import re
 import sys
 
 # Adding this to path to be able to import irlib
-sys.path.append('../../')
+sys.path.append('irlab')
 
 # Importing the irlib stuff
 from irlib.classifier import NaiveBayes
@@ -109,13 +109,13 @@ def main():
 
 	ev = Evaluation()
 	ml = Rocchio(verbose=VERBOSE, fold='n/a', config=config, ev=ev)
-	training(config, "TRAIN.jdb", ml, prep, first_n_files=50)
+	training(config, "sgms/TRAIN.jdb", ml, prep, first_n_files=50)
 	ml.do_padding()
 	ml.calculate_training_data()
 	# r.display_idx()
 	ml.diagnose()
 	# config.display_configuration()
-	testing(config, "TEST.jdb", ml, ev, prep, first_n_files=10)
+	testing(config, "sgms/TEST.jdb", ml, ev, prep, first_n_files=10)
 	
 	k = config_data['k']
 	results = ev.calculate(review_spam=True, k=k)

@@ -1,6 +1,7 @@
 from Tkinter import *
 from tkFileDialog import *
 from ReutersReader import *
+from classify import *
 from threading import Thread
 
 class myButton(Button):
@@ -48,13 +49,13 @@ class IRHw2GUI(Frame):
 		self.readBtn = self.createButton("Parse", 0, 1, disable, self.parseFile, asy=True)
 
 	def newTrainButton(self, disable=True):
-		self.trainBtn = self.createButton("Train", 0, 2, disable)
+		self.trainBtn = self.createButton("Train", 0, 2, disable, self.train, asy=True)
 
 	def newTestButton(self, disable=True):
-		self.testBtn = self.createButton("Test", 0, 3, disable)
+		self.testBtn = self.createButton("Test", 0, 3, disable, self.test, asy=True)
 
 	def newResultButton(self, disable=True):
-		self.testBtn = self.createButton("Result", 0, 4, disable)
+		self.resultBtn = self.createButton("Result", 0, 4, disable, self.result, asy=True)
 
 	def createWidgets(self):
 		self.selectBtn = self.createButton("Select", 0, 0, False, self.selectFile)
@@ -68,7 +69,7 @@ class IRHw2GUI(Frame):
 
 	def printMessage(self, message, end="\n"):
 		print message
-		self.message.insert(INSERT, message + end)
+		self.message.insert(INSERT, str(message) + end)
 
 	def selectFile(self):
 		filename = askopenfilename()
@@ -83,15 +84,43 @@ class IRHw2GUI(Frame):
 	def parseFile(self):
 		self.setButtonDisable(self.selectBtn, True)
 		self.setButtonDisable(self.readBtn, True)
+
 		RReader = ReutersReader(printMessage=self.printMessage)
 		docs = RReader.handle_tar(self.filename, True)
 		self.printMessage("Train Docs: " + str(len(docs["train"])) + "\n" + 
 			"Test Docs: " + str(len(docs["test"])))
+
+		self.setButtonDisable(self.selectBtn, False)
+		self.newTrainButton(False)
+	
+	def train(self):
+		self.setButtonDisable(self.selectBtn, True)
+		self.setButtonDisable(self.trainBtn, True)
+
+		self.Classify = Classify(self.printMessage)
+		self.Classify.setConfig()
+		self.Classify.training()
+
+		self.setButtonDisable(self.selectBtn, False)
+		self.newTestButton(False)
+
+	def test(self):
+		self.setButtonDisable(self.selectBtn, True)
+		self.setButtonDisable(self.testBtn, True)
+
+		self.Classify.testing()
+
+		self.setButtonDisable(self.selectBtn, False)
+		self.newResultButton(False)
+
+	def result(self):
+		self.setButtonDisable(self.selectBtn, True)
+		self.setButtonDisable(self.testBtn, True)
+
+		self.Classify.result()
+
 		self.setButtonDisable(self.selectBtn, False)
 
-		self.docs = docs
-		self.newTrainButton(False)
- 
 if __name__ == '__main__':
 	root = Tk()
 	app = IRHw2GUI(master=root)

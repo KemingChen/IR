@@ -88,16 +88,16 @@ class Classify():
 	def training(self):
 		self.ev = Evaluation()
 		self.ml = Rocchio(verbose=VERBOSE, fold='n/a', config=self.config, ev=self.ev)
-		self.parse_files(fold="sgms/TRAIN.jdb", mode='training', first_n_files=200, ml=self.ml, config=self.config, prep=self.prep)
+		self.parse_files(fold="sgms/TRAIN.jdb", mode='training', first_n_files=10000, ml=self.ml, config=self.config, prep=self.prep)
 		self.ml.do_padding()
 		self.ml.calculate_training_data()
 		self.ml.diagnose()
 		
 	# Let's test on the remaining folder
 	def testing(self):
-		self.parse_files(fold="sgms/TEST.jdb", mode='testing', first_n_files=10, ml=self.ml, config=self.config, prep=self.prep)
+		self.parse_files(fold="sgms/TEST.jdb", mode='testing', first_n_files=10000, ml=self.ml, config=self.config, prep=self.prep)
 		self.ml.compare_queries()
 
 	def result(self):
-		results = self.ev.calculate(review_spam=True, k=config.get_configuration()['k'])
+		results = self.ev.calculate(review_spam=True, k=self.config.get_configuration()['k'])
 		self.printMessage(results)

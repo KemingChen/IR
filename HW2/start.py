@@ -88,8 +88,9 @@ class IRHw2GUI(Frame):
 		self.printMessage("Train Docs: " + str(len(docs["train"])) + "\n" + 
 			"Test Docs: " + str(len(docs["test"])))
 		self.setButtonDisable(self.selectBtn, False)
-		
+
 		self.docs = docs
+		self.newTrainButton(False)
  
 if __name__ == '__main__':
 	root = Tk()

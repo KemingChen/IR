@@ -18,16 +18,17 @@ import re
 import sys
 
 # Adding this to path to be able to import irlib
-sys.path.append('../../')
+sys.path.append('irlab')
 
 # Importing the irlib stuff
-from irlib.classifier import NaiveBayes
+# from irlib.classifier import NaiveBayes
 from irlib.classifier import Rocchio  
-from irlib.classifier import KNN  
+# from irlib.classifier import KNN  
 from irlib.classifier import Evaluation 
 from irlib.preprocessor import Preprocessor  
 from irlib.configuration import Configuration  
 import json
+from whoosh.analysis import SimpleAnalyzer
 
 VERBOSE = True
 
@@ -58,8 +59,10 @@ def parse_files(fold=1, mode = "training", first_n_files = 500, ml=object, confi
 		if counter % 100 == 0:
 			print counter
 		doc_id = objs[i][unicode('id')]
-		terms = prep.ngram_tokenizer(text=objs[i][unicode('content')])
-		# terms = objs[i][unicode('content')]
+		# terms = prep.ngram_tokenizer(text=objs[i][unicode('content')])
+		terms = [token.text for token in prep(objs[i][unicode('content')]) if token.text != "" ]
+		# print terms
+
 		for class_name in objs[i][unicode('topics')]:
 			if mode == 'training':
 				ml.add_doc(doc_id = doc_id, doc_class=class_name, doc_terms=terms)
@@ -104,7 +107,8 @@ class Classifier():
 		prep_stem = self.config_data['stem']
 		prep_pos = self.config_data['pos']
 		prep_ngram = self.config_data['ngram'] 
-		self.prep = Preprocessor(pattern='\W+', lower=prep_lower, stem=prep_stem, pos=prep_pos, ngram=prep_ngram)
+		#self.prep = Preprocessor(pattern='\W+', lower=prep_lower, stem=prep_stem, pos=prep_pos, ngram=prep_ngram)
+		self.prep = SimpleAnalyzer(expression=r"[A-Za-z]*", gaps=False)
 
 		self.ev = Evaluation()
 		self.ml = Rocchio(verbose=VERBOSE, fold='n/a', config=self.config, ev=self.ev)
@@ -120,7 +124,7 @@ class Classifier():
 		self.results = self.ev.calculate(review_spam=True, k=k)
 	def result(self):
 		return self.results
-		
+
 if __name__ == '__main__':
 
 	# Profiling mode is not to be used in production,

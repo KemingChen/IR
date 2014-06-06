@@ -41,10 +41,10 @@ class IRHw2GUI(Frame):
 	def parseFile(self):
 		if self.filename != "":
 			RReader = ReutersReader(printMessage=self.printMessage)
-			docs = RReader.handle_tar(self.filename)
+			docs = RReader.handle_tar(self.filename, True)
 			# docs = RReader.load()
-			self.printMessage("Train Docs: " + len(docs["train"]) + "\n" + 
-				"Test Docs: " + len(docs["test"]))
+			self.printMessage("Train Docs: " + str(len(docs["train"])) + "\n" + 
+				"Test Docs: " + str(len(docs["test"])))
 		else:
 			self.printMessage("No Selected File...")
  

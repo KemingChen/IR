@@ -92,14 +92,14 @@ class ReutersReader():
 		self.root = "sgms"
 		self.RParser = ReutersParser(printMessage)
 
-	def handle_tar(self, filename):
+	def handle_tar(self, filename, saveToLocal=False):
 		# ex: "HW2/datas/reuters21578.tar.gz"
 		tar = tarfile.open(filename)
 		tar.extractall(self.root, members=self.sgm_files(tar))
 		tar.close()
-		return self.handle_sgms()
+		return self.handle_sgms(saveToLocal)
 
-	def handle_sgms(self):
+	def handle_sgms(self, saveToLocal):
 		docs = {}
 		for root, _dirnames, filenames in os.walk(self.root):
 			for filename in filenames:
@@ -114,6 +114,8 @@ class ReutersReader():
 					# print ""
 		docs["train"] = self.RParser.getTrainDocs()
 		docs["test"] = self.RParser.getTestDocs()
+		if saveToLocal:
+			self.save()
 		return docs
 
 	def load(self):

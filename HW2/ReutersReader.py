@@ -6,9 +6,10 @@ import json
 
 class ReutersParser(SGMLParser):
 	"""Utility class to parse a SGML file and yield documents one at a time."""
-	def __init__(self, verbose=0):
+	def __init__(self, verbose=0, printMessage=None):
 		self.docsTrain = {}
 		self.docsTest = {}
+		self.printMessage = printMessage
 		SGMLParser.__init__(self, verbose)
 		self._reset()
 
@@ -86,18 +87,19 @@ class ReutersParser(SGMLParser):
 		return self.docsTest
 
 class ReutersReader():
-	def __init__(self, verbose=0):
+	def __init__(self, verbose=0, printMessage=None):
+		self.printMessage = printMessage
 		self.root = "sgms"
-		self.RParser = ReutersParser()
+		self.RParser = ReutersParser(printMessage)
 
-	def handle_tar(self, filename):
+	def handle_tar(self, filename, saveToLocal=False):
 		# ex: "HW2/datas/reuters21578.tar.gz"
 		tar = tarfile.open(filename)
 		tar.extractall(self.root, members=self.sgm_files(tar))
 		tar.close()
-		return self.handle_sgms()
+		return self.handle_sgms(saveToLocal)
 
-	def handle_sgms(self):
+	def handle_sgms(self, saveToLocal):
 		docs = {}
 		for root, _dirnames, filenames in os.walk(self.root):
 			for filename in filenames:
@@ -105,13 +107,15 @@ class ReutersReader():
 				name, ext = os.path.splitext(path)
 				# print name, ext
 				if ext == ".sgm":
-					print path
+					self.printMessage("handle: " + path)
 					self.RParser.parse(open(path))
-					print "TRAIN: ", len(self.RParser.getTrainDocs())
-					print "TEST: ", len(self.RParser.getTestDocs())
-					print ""
+					# print "TRAIN: ", len(self.RParser.getTrainDocs())
+					# print "TEST: ", len(self.RParser.getTestDocs())
+					# print ""
 		docs["train"] = self.RParser.getTrainDocs()
 		docs["test"] = self.RParser.getTestDocs()
+		if saveToLocal:
+			self.save()
 		return docs
 
 	def load(self):

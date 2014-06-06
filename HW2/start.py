@@ -30,21 +30,23 @@ class IRHw2GUI(Frame):
 		self.message = Text(self, relief=RIDGE)
 		self.message.grid(row=1, column=0, columnspan=6)
 
-	def addMessage(self, message, end="\n"):
+	def printMessage(self, message, end="\n"):
+		print message
 		self.message.insert(INSERT, message + end)
 
 	def selectFile(self):
 		self.filename = askopenfilename()
-		self.addMessage("Select: " + self.filename)
+		self.printMessage("Select: " + self.filename)
 
 	def parseFile(self):
 		if self.filename != "":
-			RReader = ReutersReader()
-			docs = RReader.handle_tar(self.filename)
+			RReader = ReutersReader(printMessage=self.printMessage)
+			docs = RReader.handle_tar(self.filename, True)
 			# docs = RReader.load()
-			print len(docs["train"]), len(docs["test"])
+			self.printMessage("Train Docs: " + str(len(docs["train"])) + "\n" + 
+				"Test Docs: " + str(len(docs["test"])))
 		else:
-			self.addMessage("No Selected File...")
+			self.printMessage("No Selected File...")
  
 if __name__ == '__main__':
 	root = Tk()

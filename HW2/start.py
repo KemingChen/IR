@@ -99,7 +99,7 @@ class IRHw2GUI(Frame):
 
 		self.Classify = Classify(self.printMessage)
 		self.Classify.setConfig()
-		self.Classify.training()
+		self.Classify.training(4000)
 
 		self.setButtonDisable(self.selectBtn, False)
 		self.newTestButton(False)
@@ -108,7 +108,7 @@ class IRHw2GUI(Frame):
 		self.setButtonDisable(self.selectBtn, True)
 		self.setButtonDisable(self.testBtn, True)
 
-		self.Classify.testing()
+		self.Classify.testing(4000)
 
 		self.setButtonDisable(self.selectBtn, False)
 		self.newResultButton(False)

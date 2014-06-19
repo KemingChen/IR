@@ -1,16 +1,26 @@
 var read = require('node-readability');
+var fs = require('fs');
+var readline = require('readline');
+var exec = require('child_process').exec;
 
-read('http://howtonode.org/really-simple-file-uploads', function(err, article, meta) {
-	// The main body of the page.
-	console.log(article.content);
-	// // The title of the page.
-	// console.log(article.title);
-
-	// The raw HTML code of the page
-	// console.log(article.html);
-	// // The document object of the page
-	// console.log(article.document);
-
-	// // The response object from request lib
-	// console.log(meta);
+var rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout
 });
+//'http://blog.xuite.net/ca062/blog/221677672'
+rl.question("Please type the html or url to extract content: \n", function(answer) {
+	// TODO: Log the answer in a database
+	console.log("Processing: ", answer);
+
+	read(answer, function(err, article, meta) {
+		fs.writeFile('output.html', article.content, function (err) {
+			if (err) throw err;
+			console.log('Finish!!!');
+			rl.close();
+			exec("explorer output.html");
+		});
+	});
+});
+
+
+

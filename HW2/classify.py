@@ -85,17 +85,17 @@ class Classify():
 		fd.close()
 
 	# Let's do some workout now on all folders but one
-	def training(self):
+	def training(self, first_n_files=10000):
 		self.ev = Evaluation()
 		self.ml = Rocchio(verbose=VERBOSE, fold='n/a', config=self.config, ev=self.ev)
-		self.parse_files(fold="sgms/TRAIN.jdb", mode='training', first_n_files=10000, ml=self.ml, config=self.config, prep=self.prep)
+		self.parse_files(fold="sgms/TRAIN.jdb", mode='training', first_n_files=first_n_files, ml=self.ml, config=self.config, prep=self.prep)
 		self.ml.do_padding()
 		self.ml.calculate_training_data()
 		self.ml.diagnose()
 		
 	# Let's test on the remaining folder
-	def testing(self):
-		self.parse_files(fold="sgms/TEST.jdb", mode='testing', first_n_files=10000, ml=self.ml, config=self.config, prep=self.prep)
+	def testing(self, first_n_files=10000):
+		self.parse_files(fold="sgms/TEST.jdb", mode='testing', first_n_files=first_n_files, ml=self.ml, config=self.config, prep=self.prep)
 		self.ml.compare_queries()
 
 	def result(self):

@@ -58,14 +58,16 @@ getContent()
 		從中選出最高分為topCandidate
 		如果沒有topCandidate則將body node視為topCandidate
 
-	把topCandidate的siblingNode全找出來，並將(topCandidate的分數 * 0.2 且最少為10分)視為siblingScoreThreshold
-		如果siblingNode的分數 >= siblingScoreThreshold 則將之記錄到articleContent中
-		如果siblingNode為P
-			if (nodeLength > 80 && linkDensity < 0.25) {
-				記錄到articleContent中
-			} else if (nodeLength < 80 && linkDensity == 0 && nodeContent.search(/\.( |$)/) !== -1) {
-				記錄到articleContent中
-			}
+	抽取articleContent
+		把topCandidate加到articleContent
+		把topCandidate的siblingNode全找出來
+		並將topCandidate的分數 * 0.2設為Threshold，Threshold低於10分則設為10分
+			如果siblingNode的分數 >= siblingScoreThreshold
+			如果siblingNode為P
+				nodeLength > 80 and linkDensity < 0.25
+				nodeLength < 80 && linkDensity == 0 && nodeContent.search(/\.( |$)/) !== -1
+			就把該node加入articleContent
+
 
 	內文最後處理
 		把articleContent中的

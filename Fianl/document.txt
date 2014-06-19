@@ -1,0 +1,84 @@
+var regexps = {
+	unlikelyCandidatesRe: /combx|comment|disqus|foot|header|menu|meta|nav|rss|shoutbox|sidebar|sponsor/i,
+	okMaybeItsACandidateRe: /and|article|body|column|main/i,
+	positiveRe: /article|body|content|entry|hentry|page|pagination|post|text/i,
+	negativeRe: /combx|comment|contact|foot|footer|footnote|link|media|meta|promo|related|scroll|shoutbox|sponsor|utility|tags|widget/i,
+	divToPElementsRe: /<(a|blockquote|dl|div|img|ol|p|pre|table|ul)/i,
+	replaceBrsRe: /(<br[^>]*>[ \n\r\t]*){2,}/gi,
+	replaceFontsRe: /<(\/?)font[^>]*>/gi,
+	trimRe: /^\s+|\s+$/g,
+	normalizeRe: /\s{2,}/g,
+	killBreaksRe: /(<br\s*\/?>(\s|&nbsp;?)*){1,}/g,
+	videoRe: /http:\/\/(www\.)?(youtube|vimeo|youku|tudou|56|yinyuetai)\.com/i
+};
+
+prepDocument()
+	先找所有的frame，並計算所有的Frame的Size，計算方式為 Witdh + Hight
+	並確認是否可以存取此Frame
+	在所有的Frame中找出Size最大的加入到待會的body計算中
+
+	並刪除所有的script, css
+
+	將所有的"(<br[^>]*>[ \n\r\t]*){2,}"=>"<p></p>", "<(\/?)font[^>]*>"=>"<$1span>"置換掉，不列入計算
+
+getTitle()
+	會利用[' | ', ' _ ', ' - ', '«', '»', '—']，個別去對title split
+	如果能split出來，則將最前面的string紀錄下來，則此就是最好的title
+	如果完全不能分，則原本的title則是最好的title
+
+getContent()
+	前處理把id或classname符合unlikelyCandidatesRe但不符合okMaybeItsACandidateRe的node刪除
+	/combx|comment|disqus|foot|header|menu|meta|nav|rss|shoutbox|sidebar|sponsor/i
+	/and|article|body|column|main/i
+	
+	把單層DIV轉成P	
+	不符合 /<(a|blockquote|dl|div|img|ol|p|pre|table|ul)/i 的 DIV轉成P
+
+	開始打分數
+		節點分數算法
+			TAG TYPE
+				div + 5
+				pre, td, blockquote + 3
+				address, ol, ul, dl, dd, dt, li, form - 3
+				h1~h6 -6
+			ID, ClassName
+				符合positiveRe + 25
+				符合negativeRe - 25
+		針對所有P算出分數
+		如果P innerText 長度小於25則略過
+		初始為2分
+		innerText每100字+1分 最多加3分
+		innerText每有一個逗號+1分
+		把P算出來的分數+到parentNode
+		一半的分數+到grandParentNode
+		這些parentNode與grandParentNode會被加到cadidate array
+
+	從cadidate array選出topCandidate
+		cadicate的score *= (1-linkDensity)
+		從中選出最高分為topCandidate
+		如果沒有topCandidate則將body node視為topCandidate
+
+	把topCandidate的siblingNode全找出來，並將(topCandidate的分數 * 0.2 且最少為10分)視為siblingScoreThreshold
+		如果siblingNode的分數 >= siblingScoreThreshold 則將之記錄到articleContent中
+		如果siblingNode為P
+			if (nodeLength > 80 && linkDensity < 0.25) {
+				記錄到articleContent中
+			} else if (nodeLength < 80 && linkDensity == 0 && nodeContent.search(/\.( |$)/) !== -1) {
+				記錄到articleContent中
+			}
+
+	內文最後處理
+		把articleContent中的
+			Style, Break("(<br\s*\/?>(\s|&nbsp;?)*){1,}/g"), form, object, h1, h2(if only one), iframe, head(包含其子節點)剃除
+			只要有找到 /http:\/\/(www\.)?(youtube|vimeo|youku|tudou|56|yinyuetai)\.com/i 就不要remove
+			
+			有條件的刪除 table, ul, div
+			刪除沒有圖片, embed, 內文的P
+			Remove the header that doesn't have next sibling.
+
+		把P與P之間的多餘空白及換行刪除
+			replace(/<br[^>]*>\s*<p/gi, '<p');
+
+		把相對路徑換成絕對路徑
+			
+

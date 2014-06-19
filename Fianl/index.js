@@ -11,9 +11,8 @@ var rl = readline.createInterface({
 rl.question("Please type the html or url to extract content: \n", function(answer) {
 	// TODO: Log the answer in a database
 	console.log("Processing: ", answer);
-
 	read(answer, function(err, article, meta) {
-		fs.writeFile('output.html', article.content, function (err) {
+		fs.writeFile('output.html', article.title + article.content, function (err) {
 			if (err) throw err;
 			console.log('Finish!!!');
 			rl.close();
